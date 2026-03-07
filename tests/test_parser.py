@@ -876,6 +876,26 @@ def _make_full_earley_test(LEXER):
             tree = l.parse('x')
             assert tree == Tree('start', [Tree('a', ['x'])])
 
+        @unittest.skipIf(LEXER=='basic', 'This scenario only occurs with the dynamic lexers')
+        def test_multiple_start_solutions2(self):
+            grammar = r"""
+                !start: "foo1" | "foo" | "foo12"
+                %ignore "1"
+                %ignore "2"
+            """
+            l = Lark(grammar, ambiguity='explicit', lexer=LEXER)
+            tree = l.parse('foo12')
+
+            expected = Tree('_ambig', [
+                Tree('start', ['foo1']),
+                Tree('start', ['foo']),
+                Tree('start', ['foo12']),
+            ])
+            self.assertEqual(tree, expected)
+
+            l = Lark(grammar, ambiguity='resolve', lexer=LEXER)
+            tree = l.parse('foo12')
+            self.assertEqual(tree, Tree('start', ['foo1']))
 
         def test_cycle(self):
             grammar = """
